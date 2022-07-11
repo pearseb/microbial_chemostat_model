@@ -110,6 +110,16 @@ fin_bAOO = np.ones((len(dil), len(O20_exp))) * np.nan
 fin_bNOO = np.ones((len(dil), len(O20_exp))) * np.nan
 fin_bAOX = np.ones((len(dil), len(O20_exp))) * np.nan
 
+# Growth rates
+fin_uHet = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_uFac = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_u1Den = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_u2Den = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_u3Den = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_uAOO = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_uNOO = np.ones((len(dil), len(O20_exp))) * np.nan
+fin_uAOX = np.ones((len(dil), len(O20_exp))) * np.nan
+
 # track facultative average respiration
 fin_facaer = np.ones((len(dil), len(O20_exp))) * np.nan
 
@@ -201,10 +211,11 @@ for k in np.arange(len(dil)):
         pulse_O2 = 0.0
         
         # 3) Call main model
-        results = OMZredox(timesteps, nn_output, dt, dil[k], out_at_day, \
+        results = OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
                            pulse_Sd, pulse_bHet, pulse_bFac, pulse_O2, pulse_int, \
                            po_aer, po_aoo, po_noo, \
-                           VmaxS, K_s, VmaxN_1Den, VmaxN_2Den, VmaxN_3Den, VmaxN_1DenFac, K_n_Den, \
+                           VmaxS, K_s, \
+                           VmaxN_1Den, VmaxN_2Den, VmaxN_3Den, VmaxN_1DenFac, K_n_Den, \
                            VmaxN_AOO, K_n_AOO, VmaxN_NOO, K_n_NOO, \
                            VmaxNH4_AOX, K_nh4_AOX, VmaxNO2_AOX, K_no2_AOX, \
                            y_oHet, y_oO2, y_oHetFac, y_oO2Fac, \
@@ -229,22 +240,31 @@ for k in np.arange(len(dil)):
         out_bAOO = results[12]
         out_bNOO = results[13]
         out_bAOX = results[14]
-        out_facaer = results[15]
-        out_rHet = results[16]
-        out_rHetAer = results[17]
-        out_rO2C = results[18]
-        out_r1Den = results[19]
-        out_r2Den = results[20]
-        out_r3Den = results[21]
-        out_rAOO = results[22]
-        out_rNOO = results[23]
-        out_rAOX = results[24]
+        out_uHet = results[15]
+        out_uFac = results[16]
+        out_u1Den = results[17]
+        out_u2Den = results[18]
+        out_u3Den = results[19]
+        out_uAOO = results[20]
+        out_uNOO = results[21]
+        out_uAOX = results[22]
+        out_facaer = results[23]
+        out_rHet = results[24]
+        out_rHetAer = results[25]
+        out_rO2C = results[26]
+        out_r1Den = results[27]
+        out_r2Den = results[28]
+        out_r3Den = results[29]
+        out_rAOO = results[30]
+        out_rNOO = results[31]
+        out_rAOX = results[32]
         
-        
+        '''
         # 4) plot the results
-        #line_plot(nn_output, out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2, 
-        #          out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX, 
-        #          out_rHet, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX)
+        line_plot(nn_output, out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2, 
+                  out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX, 
+                  out_rHet, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX)
+        '''
         
         # 5) Record solutions in initialised arrays
         fin_O2[k,m] = np.nanmean(out_O2[-200::])
@@ -262,6 +282,14 @@ for k in np.arange(len(dil)):
         fin_bAOO[k,m] = np.nanmean(out_bAOO[-200::])
         fin_bNOO[k,m] = np.nanmean(out_bNOO[-200::])
         fin_bAOX[k,m] = np.nanmean(out_bAOX[-200::])
+        fin_uHet[k,m] = np.nanmean(out_uHet[-200::])
+        fin_uFac[k,m] = np.nanmean(out_uFac[-200::])
+        fin_u1Den[k,m] = np.nanmean(out_u1Den[-200::])
+        fin_u2Den[k,m] = np.nanmean(out_u2Den[-200::])
+        fin_u3Den[k,m] = np.nanmean(out_u3Den[-200::])
+        fin_uAOO[k,m] = np.nanmean(out_uAOO[-200::])
+        fin_uNOO[k,m] = np.nanmean(out_uNOO[-200::])
+        fin_uAOX[k,m] = np.nanmean(out_uAOX[-200::])
         fin_facaer[k,m] = np.nanmean(out_facaer[-200::])
         fin_rHet[k,m] = np.nanmean(out_rHet[-200::])
         fin_rHetAer[k,m] = np.nanmean(out_rHetAer[-200::])
@@ -284,17 +312,22 @@ print("Proportion of N2 produced by anammox = ", ((fin_rAOX*y_nh4AOX*e_n2AOX*0.5
 
 # 6. check conservation of mass if dilution rate is set to zero
 if dil == 0.0:
-    end_N = fin_Sd + fin_Sp + fin_NO3 + fin_NO2 + fin_NH4 + fin_N2 + fin_bHet + fin_bFac + fin_b1Den + fin_b2Den + fin_b3Den + fin_bAOO + fin_bNOO + fin_bAOX
-    ini_N = in_Sd + in_Sp + in_NO3 + in_NO2 + in_NH4 + in_bHet + in_bFac + in_b1Den + in_b2Den + in_b3Den + in_bAOO + in_bNOO + in_bAOX
+    end_N = fin_Sd + fin_Sp + fin_NO3 + fin_NO2 + fin_NH4 + fin_N2 + \
+            fin_bHet + fin_bFac + fin_b1Den + fin_b2Den + fin_b3Den + fin_bAOO + fin_bNOO + fin_bAOX
+    ini_N = Sd0_exp + in_Sp + in_NO3 + in_NO2 + in_NH4 + \
+            in_bHet + in_bFac + in_b1Den + in_b2Den + in_b3Den + in_bAOO + in_bNOO + in_bAOX
     for k in np.arange(len(Sd0_exp)):
         for m in np.arange(len(O20_exp)):
             print(" Checking conservation of N mass ")
-            print(" Initial Nitrogen =", ini_N)
+            print(" Initial Nitrogen =", ini_N[k])
             print(" Final Nitrogen =", end_N[k,m])
             
 
 del results
-del out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2, out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX, out_facaer, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX
+del out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2
+del out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX
+del out_uHet, out_uFac, out_u1Den, out_u2Den, out_u3Den, out_uAOO, out_uNOO, out_uAOX
+del out_facaer, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX
 
 
 #%% save the output to data folder
@@ -318,6 +351,15 @@ np.savetxt(fname+'_b3Den.txt', fin_b3Den, delimiter='\t')
 np.savetxt(fname+'_bAOO.txt', fin_bAOO, delimiter='\t')
 np.savetxt(fname+'_bNOO.txt', fin_bNOO, delimiter='\t')
 np.savetxt(fname+'_bAOX.txt', fin_bAOX, delimiter='\t')
+
+np.savetxt(fname+'_uHet.txt', fin_uHet, delimiter='\t')
+np.savetxt(fname+'_uFac.txt', fin_uFac, delimiter='\t')
+np.savetxt(fname+'_u1Den.txt', fin_u1Den, delimiter='\t')
+np.savetxt(fname+'_u2Den.txt', fin_u2Den, delimiter='\t')
+np.savetxt(fname+'_u3Den.txt', fin_u3Den, delimiter='\t')
+np.savetxt(fname+'_uAOO.txt', fin_uAOO, delimiter='\t')
+np.savetxt(fname+'_uNOO.txt', fin_uNOO, delimiter='\t')
+np.savetxt(fname+'_uAOX.txt', fin_uAOX, delimiter='\t')
 
 np.savetxt(fname+'_facaer.txt', fin_facaer, delimiter='\t')
 np.savetxt(fname+'_rHet.txt', fin_rHet, delimiter='\t')
