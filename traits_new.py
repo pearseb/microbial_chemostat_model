@@ -89,7 +89,6 @@ EEA_CN = 1.123  # relative rate of enzymatic processing of complex C and complex
 
 # aerobic heterotrophy 
 y_oHet = yield_stoich(Y_max, B_CN, OM_CN, K_CN, EEA_CN) / B_CN * OM_CN  # OM_CN / B_CN converts to mol BioN per mol OrgN 
-y_oHet = 0.4/0.9
 f_oHet = y_oHet * dB/dO  # The fraction of electrons used for biomass synthesis (Eq A9 in Zakem et al. 2019 ISME)
 y_oO2 = (f_oHet/dB) / ((1.0-f_oHet)/4.0)  # yield of biomass per unit oxygen reduced
 VmaxS = mumax_Het / y_oHet  # mol Org N (mol BioN)-1 per day
