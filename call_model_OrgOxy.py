@@ -37,7 +37,6 @@ import os
 import numpy as np
 import xarray as xr
 import pandas as pd
-import netCDF4 as nc
 
 # plotting packages
 import seaborn as sb
@@ -66,11 +65,11 @@ print("cmocean version =", sys.modules[cmo.__package__].__version__)
 #%% Set initial conditions and incoming concentrations to chemostat experiment
 
 ### Organic matter (S)
-# range of org C flux from 2-8 uM C m-2 day-1 --> 0.26 - 1 uM N m-3 day-1, assuming 1 m3 box and flux into top of box
+# range of org C flux from 2-8 uM C m-2 day-1 --> 0.26 - 1 uM N m-3 day-1, 
+# assuming 1 m3 box and flux into top of box
 Sd0_exp = np.arange(0.1,2.1,0.1)    # uM N  (dissolved; d)
 Sp0_exp = [0.0]    # uM N  (particulate; p)
 
-Sd0_exp = np.array([0.1, 0.3, 0.5, 0.7, 0.9, 1.5, 2.0, 10])
 ### Oxygen
 O20_exp = np.arange(0.0,8.1,0.1)   # uM O2
 O20_exp = [0.0]
@@ -144,17 +143,6 @@ os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerob
 #from traits_old import *
 from traits_new import *
 
-'''
-# Chemoautotrophic anammox (NH4 + NO2 --> NO3 + N2)
-y_nh4AOX = 1/154.                # mol N biomass per mol NH4 (Zakem et al. 2019 ISME)
-y_no2AOX = 1/216.                # mol N biomass per mol NO2 (Zakem et al. 2019 ISME)
-e_n2AOX = 163.*2                 # mol N (as N2) formed per mol biomass N synthesised
-e_no3AOX = 43.                   # mol NO3 formed per mol biomass N synthesised
-VmaxNH4_AOX = mumax_AOX / y_nh4AOX
-VmaxNO2_AOX = mumax_AOX / y_no2AOX
-
-K_n_Den = 0.1
-'''
 
 #%% calculate R*-stars for all microbes
 
@@ -203,17 +191,17 @@ for k in np.arange(len(Sd0_exp)):
         in_O2 = O20_exp[m]
         in_Sp = 0.0  
         in_NO3 = 30.0
-        in_NO2 = 10.0
+        in_NO2 = 0.0
         in_NH4 = 0.0
         
         # 2) Initial biomasses (set to 0.0 to exclude)
-        in_bHet = 0.0
+        in_bHet = 0.1
         in_bFac = 0.0
         in_b1Den = 0.1
         in_b2Den = 0.1
         in_b3Den = 0.0
-        in_bAOO = 0.0
-        in_bNOO = 0.0
+        in_bAOO = 0.1
+        in_bNOO = 0.1
         in_bAOX = 0.1
         
         # pulse conditions
@@ -222,8 +210,6 @@ for k in np.arange(len(Sd0_exp)):
         pulse_bHet = 0.00
         pulse_bFac = 0.00
         pulse_O2 = 0.0
-        
-        dil = 0.05
         
         # 3) Call main model
         results = OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
@@ -274,11 +260,12 @@ for k in np.arange(len(Sd0_exp)):
         out_rNOO = results[31]
         out_rAOX = results[32]
         
-        
+        '''
         # 4) plot the results
         line_plot(nn_output, out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2, 
                   out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX, 
                   out_rHet, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX)
+        '''
         
         # 5) Record solutions in initialised arrays
         fin_O2[k,m] = np.nanmean(out_O2[-200::])
@@ -344,22 +331,11 @@ del out_uHet, out_uFac, out_u1Den, out_u2Den, out_u3Den, out_uAOO, out_uNOO, out
 del out_facaer, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX
 
 
-#%%
-
-per_anammox = ((fin_rAOX*y_nh4AOX*e_n2AOX*0.5) / ((fin_rAOX*y_nh4AOX*e_n2AOX*0.5)+(fin_r2Den+fin_r3Den)*0.5)*100 )
-tot_n2prod = (fin_rAOX*y_nh4AOX*e_n2AOX*0.5)+(fin_r2Den+fin_r3Den)*0.5
-b_1Den_2Den = fin_b1Den / fin_b2Den
-
-plt.figure()
-plt.scatter(b_1Den_2Den, per_anammox, c=tot_n2prod)
-plt.xlim(0.5,3.0)
-plt.colorbar()
-
 #%% save the output to data folder
 
 os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data/0D_redox_model_output")
 
-fname = 'newtraits_y0.4'
+fname = 'newtraits'
 
 np.savetxt(fname+'_O2.txt', fin_O2, delimiter='\t')
 np.savetxt(fname+'_N2.txt', fin_N2, delimiter='\t')
