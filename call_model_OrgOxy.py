@@ -56,7 +56,6 @@ print("python version =",sys.version[:5])
 print("numpy version =", np.__version__)
 print("xarray version =", xr.__version__)
 print("pandas version =", pd.__version__)
-print("netCDF4 version =", nc.__version__)
 print("seaborn version =", sb.__version__)
 print("matplotlib version =", sys.modules[plt.__package__].__version__)
 print("cmocean version =", sys.modules[cmo.__package__].__version__)
@@ -68,11 +67,9 @@ print("cmocean version =", sys.modules[cmo.__package__].__version__)
 # range of org C flux from 2-8 uM C m-2 day-1 --> 0.26 - 1 uM N m-3 day-1, 
 # assuming 1 m3 box and flux into top of box
 Sd0_exp = np.arange(0.1,2.1,0.1)    # uM N  (dissolved; d)
-Sp0_exp = [0.0]    # uM N  (particulate; p)
 
 ### Oxygen
-O20_exp = np.arange(0.0,8.1,0.1)   # uM O2
-O20_exp = [0.0]
+O20_exp = np.arange(0.0,8.1,0.2)   # uM O2
 
 print("Ratios of Org:O2 suppply")
 xx=0
@@ -86,7 +83,7 @@ dil = 0.05  # dilution rate (1/day)
 days = 1e4  # number of days to run chemostat
 dt = 0.001  # timesteps per day (days)
 timesteps = days/dt     # number of timesteps
-out_at_day = 1.0       # output results this often (days)
+out_at_day = 10.0       # output results this often (days)
 nn_output = days/out_at_day     # number of entries for output
 
 

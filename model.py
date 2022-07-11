@@ -59,12 +59,17 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         dt          :   number of timesteps per day
         dil         :   dilution rate of chemostat
         out_at_day  :   day interval to record output
-        pulse_OM    :   instant injection of OM into the model (mmol)
+        
+        pulse_Sd    :   instant injection of OM into the model (mmol)
+        pulse_bHet  :   instant injection of bHet into the model (mmol)
+        pulse_bFac  :   instant injection of bFac into the model (mmol)
         pulse_O2    :   instant injection of O2 into the model (mmol)
         pulse_int   :   interval of pulsing (days)
                         
+        po_aer      :   diffusion-limited O2 uptake by aerobic heterotrophs (m^3 / mmol N / day)
+        po_aoo      :   diffusion-limited O2 uptake by aerobic ammonia oxidisers (m^3 / mmol N / day)
+        po_noo      :   diffusion-limited O2 uptake by aerobic nitrite oxidisers (m^3 / mmol N / day)
         
-        po_coef     :   diffusion-limited O2 uptake (m^3 / mmol N / day)
         VmaxS       :   maximum uptake rate of organic matter (mol orgN / mol N-cell / day )
         K_s         :   half saturation coefficient for organic matter uptake
         VmaxN_1Den  :   maximum uptake rate of NO3 by nitrate reducing bacteria (mol NO3 / mol N-cell / day )
@@ -99,7 +104,11 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         y_oNOO      :   mol N-biomass / mol O2 reduced
         y_nh4AOX    :   mol N-biomass / mol NH4 oxidised
         y_no2AOX    :   mol N-biomass / mol NO2 reduced
-                
+        e_n2Den     :   production of N2 by nitrite reducing denitrifiers (mol N2 / mol N-biomass)
+        e_n3Den     :   production of N2 by nitrate reducing denitrifiers (mol N2 / mol N-biomass)
+        e_no3AOX    :   production of NO3 by anammox bacteria (mol NO3 / mol N-biomass)
+        e_n2AOX     :   production of N2 by anammox bacteria (mol N2 / mol N-biomass)
+        
         in_Sd       :   initial Sd concentration
         in_Sp       :   initial Sp concentration
         in_O2       :   initial O2 concentration
@@ -119,20 +128,42 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
     OUTPUTS
     -------
     
-        m_Sd       :   modelled Sd concentration
-        m_Sp       :   modelled Sp concentration
-        m_O2       :   modelled O2 concentration
-        m_NO3      :   modelled NO3 concentration
-        m_NO2      :   modelled NO2 concentration
-        m_NH4      :   modelled NH4 concentration
-        m_bHet     :   modelled Het concentration of biomass
-        m_bFac     :   modelled Fac concentration of biomass
-        m_b1Den    :   modelled 1Den concentration of biomass
-        m_b2Den    :   modelled 2Den concentration of biomass
-        m_b3Den    :   modelled 3Den concentration of biomass
-        m_bAOO     :   modelled AOO concentration of biomass
-        m_bNOO     :   modelled NOO concentration of biomass
-        m_bAOX     :   modelled AOX concentration of biomass
+        out_Sd       :   Sd concentration
+        out_Sp       :   Sp concentration
+        out_O2       :   O2 concentration
+        out_NO3      :   NO3 concentration
+        out_NO2      :   NO2 concentration
+        out_NH4      :   NH4 concentration
+        out_N2       :   N2 concentration
+        
+        out_bHet     :   Het concentration of biomass
+        out_bFac     :   Fac concentration of biomass
+        out_b1Den    :   1Den concentration of biomass
+        out_b2Den    :   2Den concentration of biomass
+        out_b3Den    :   3Den concentration of biomass
+        out_bAOO     :   AOO concentration of biomass
+        out_bNOO     :   NOO concentration of biomass
+        out_bAOX     :   AOX concentration of biomass
+        
+        out_uHet     :   Het growth rate
+        out_uFac     :   Fac growth rate
+        out_u1Den    :   1Den growth rate
+        out_u2Den    :   2Den growth rate
+        out_u3Den    :   3Den growth rate
+        out_uAOO     :   AOO growth rate
+        out_uNOO     :   NOO growth rate
+        out_uAOX     :   AOX growth rate
+
+        out_facaer   :   average fraction of aerobic heterotrophy by facultative population
+        out_rHet     :   Rate of heterotrophy (Org--> NH4) (mmol Org m-3 day-1)
+        out_rHetAer  :   Rate of aerobic heterotrophy (Org--> NH4) (mmol Org m-2 day-1)
+        out_rO2C     :   Rate of O2 consumption (mmol O2 m-3 day-1)
+        out_r1Den    :   Rate of denitrification (NO3 --> NO2) (mmol NO3 m-3 day-1)
+        out_r2Den    :   Rate of denitrification (NO2 --> N2) (mmol NO2 m-3 day-1)
+        out_r3Den    :   Rate of denitrification (NO3 --> N2) (mmol NO3 m-3 day-1)
+        out_rAOO     :   Rate of ammonia oxidation (NH4 --> NO2) (mmol NH4 m-3 day-1)
+        out_rNOO     :   Rate of nitrite oxidation (NO2 --> NO3) (mmol NO2 m-3 day-1)
+        out_rAOX     :   Rate of anammox (NH4 + 81/70 * NO2 --> 11/70 * NO3 + 69.5/70 * N2) (mmol NH4 m-3 day-1)
     '''
     
     # transfer initial inputs to model variables
