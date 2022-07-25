@@ -35,7 +35,6 @@ Purpose
 import sys
 import os
 import numpy as np
-import xarray as xr
 import pandas as pd
 
 # plotting packages
@@ -54,7 +53,6 @@ from numba import jit
 # print versions of packages
 print("python version =",sys.version[:5])
 print("numpy version =", np.__version__)
-print("xarray version =", xr.__version__)
 print("pandas version =", pd.__version__)
 print("seaborn version =", sb.__version__)
 print("matplotlib version =", sys.modules[plt.__package__].__version__)
@@ -66,10 +64,11 @@ print("cmocean version =", sys.modules[cmo.__package__].__version__)
 ### Organic matter (S)
 # range of org C flux from 2-8 uM C m-2 day-1 --> 0.26 - 1 uM N m-3 day-1, 
 # assuming 1 m3 box and flux into top of box
-Sd0_exp = np.arange(0.1,2.1,0.1)    # uM N  (dissolved; d)
-
+Sd0_exp = np.arange(0.1,2.1,0.1)[::5]   # uM N  (dissolved; d)
+#Sd0_exp = np.array([1])
 ### Oxygen
-O20_exp = np.arange(0.0,8.1,0.2)   # uM O2
+O20_exp = np.arange(0.0,8.1,0.2)[::5]   # uM O2
+
 
 print("Ratios of Org:O2 suppply")
 xx=0
@@ -91,7 +90,7 @@ nn_output = days/out_at_day     # number of entries for output
 
 # Nutrients
 fin_O2 = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_Sd = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
+fin_Sd = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan  # organic matter
 fin_Sp = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 fin_NO3 = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 fin_NO2 = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
@@ -99,14 +98,14 @@ fin_NH4 = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 fin_N2 = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 
 # Biomasses
-fin_bHet = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_bFac = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_b1Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_b2Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_b3Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_bAOO = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_bNOO = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
-fin_bAOX = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
+fin_bHet = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan   # Heterotrophic (aerobic)
+fin_bFac = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan   # Faculative heterotrophic bacteria
+fin_b1Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan  # Nitrate reducing denitrifiers to NO2
+fin_b2Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan  # Nitrite reducing denitrifiers to N2
+fin_b3Den = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan  # Nitrate reducing denitrifiers to N2
+fin_bAOO = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan   # Ammonia oxidising organisms (archaea)
+fin_bNOO = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan   # Nitrite oxidising bacteria
+fin_bAOX = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan   # Anammox bacteria
 
 # Growth rates
 fin_uHet = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
@@ -120,6 +119,7 @@ fin_uAOX = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 
 # track facultative average respiration
 fin_facaer = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
+fin_facnoo_lim = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 
 # Rates
 fin_rHet = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
@@ -148,33 +148,59 @@ from O2_star import O2_star
 from R_star import R_star
 
 
+O2_star_aer = O2_star(dil, Qc_aer, diam_aer, dc, y_oO2*CN_aer)
+O2_star_fac = O2_star(dil, Qc_aer, diam_aer, dc, y_oO2Fac*CN_aer)
+O2_star_aoo = O2_star(dil, Qc_aoo, diam_aoo, dc, y_oAOO*CN_aoo)
+O2_star_noo = O2_star(dil, Qc_noo, diam_noo, dc, y_oNOO*CN_noo)
+
 print("Oxygen")
-print("Subsistence O2 to support bulk aerobic heterotrophy =", O2_star(dil, Qc_aer, diam_aer, dc, y_oO2*CN_aer))
-print("Subsistence O2 to support bulk aerobic (facultative) heterotrophy =", O2_star(dil, Qc_aer, diam_aer, dc, y_oO2Fac*CN_aer))
-print("Subsistence O2 to support bulk aerobic ammonia oxidation =", O2_star(dil, Qc_aoo, diam_aoo, dc, y_oAOO*CN_aoo))
-print("Subsistence O2 to support bulk aerobic nitrite oxidation =", O2_star(dil, Qc_noo, diam_noo, dc, y_oNOO*CN_noo))
+print("Subsistence O2 (nM) to support bulk aerobic heterotrophy =", O2_star_aer)
+print("Subsistence O2 (nM) to support bulk aerobic (facultative) heterotrophy =", O2_star_fac)
+print("Subsistence O2 (nM) to support bulk aerobic ammonia oxidation =", O2_star_aoo)
+print("Subsistence O2 (nM) to support bulk aerobic nitrite oxidation =", O2_star_noo)
+
+OM_star_aer = R_star(dil, K_s, VmaxS, y_oHet)
+OM_star_fac = R_star(dil, K_s, VmaxS, y_oHetFac)
+OM_star_1Den = R_star(dil, K_s, VmaxS, y_n1Den)
+OM_star_2Den = R_star(dil, K_s, VmaxS, y_n2Den)
+OM_star_3Den = R_star(dil, K_s, VmaxS, y_n3Den)
 
 print("Organic matter")
-print("Subsistence Norg to support bulk aerobic hetertrophy =", R_star(dil, K_s, VmaxS, y_oHet))
-print("Subsistence Norg to support bulk aerobic (facultative) hetertrophy =", R_star(dil, K_s, VmaxS, y_oHetFac))
-print("Subsistence Norg to support bulk anaerobic nitrate reducing hetertrophy =", R_star(dil, K_s, VmaxS, y_n1Den))
-print("Subsistence Norg to support bulk anaerobic nitrite reducing hetertrophy =", R_star(dil, K_s, VmaxS, y_n2Den))
+print("Subsistence Norg to support bulk aerobic hetertrophy =", OM_star_aer)
+print("Subsistence Norg to support bulk aerobic (facultative) hetertrophy =", OM_star_fac)
+print("Subsistence Norg to support bulk anaerobic nitrate reducing hetertrophy =", OM_star_1Den)
+print("Subsistence Norg to support bulk anaerobic nitrite reducing hetertrophy =", OM_star_2Den)
+print("Subsistence Norg to support bulk anaerobic full denitrification =", OM_star_3Den)
+
+NH4_star_aoo = R_star(dil, K_n_AOO, VmaxN_AOO, y_nAOO)
+NH4_star_aox = R_star(dil, K_nh4_AOX, VmaxNH4_AOX, y_nh4AOX)
 
 print("Ammonium")
-print("Subsistence NH4 to support bulk aerobic ammonia oxidation =", R_star(dil, K_n_AOO, VmaxN_AOO, y_nAOO))
-print("Subsistence NH4 to support bulk anaerobic ammonium oxidation (anammox) =", R_star(dil, K_nh4_AOX, VmaxNH4_AOX, y_nh4AOX))
+print("Subsistence NH4 to support bulk aerobic ammonia oxidation =", NH4_star_aoo)
+print("Subsistence NH4 to support bulk anaerobic ammonium oxidation (anammox) =", NH4_star_aox)
+
+NO2_star_2Den = R_star(dil, K_n_Den, VmaxN_2Den, y_n2NO2)
+NO2_star_noo = R_star(dil, K_n_NOO, VmaxN_NOO, y_nNOO)
+NO2_star_aox = R_star(dil, K_no2_AOX, VmaxNO2_AOX, y_no2AOX)
 
 print("Nitrite")
-print("Subsistence NO2 to support bulk denitrification (NO2 --> N2) =", R_star(dil, K_n_Den, VmaxN_2Den, y_n2NO2))
-print("Subsistence NO2 to support bulk aerobic nitrite oxidation =", R_star(dil, K_n_NOO, VmaxN_NOO, y_nNOO))
-print("Subsistence NO2 to support bulk anaerobic ammonium oxidation (anammox) =", R_star(dil, K_no2_AOX, VmaxNO2_AOX, y_no2AOX))
+print("Subsistence NO2 to support bulk denitrification (NO2 --> N2) =", NO2_star_2Den)
+print("Subsistence NO2 to support bulk aerobic nitrite oxidation =", NO2_star_noo)
+print("Subsistence NO2 to support bulk anaerobic ammonium oxidation (anammox) =", NO2_star_aox)
+
+NO3_star_1Den = R_star(dil, K_n_Den, VmaxN_1Den, y_n1NO3)
+NO3_star_fac = R_star(dil, K_n_Den, VmaxN_1DenFac, y_n1NO3Fac)
+NO3_star_3Den = R_star(dil, K_n_Den, VmaxN_3Den, y_n3NO3)
 
 print("Nitrate")
-print("Subsistence NO3 to support bulk nitrate reduction by obligate anaerobe =", R_star(dil, K_n_Den, VmaxN_1Den, y_n1NO3))
-print("Subsistence NO3 to support bulk nitrate reduction by facultative anaerobe =", R_star(dil, K_n_Den, VmaxN_1DenFac, y_n1NO3Fac))
+print("Subsistence NO3 to support bulk nitrate reduction by obligate anaerobe =", NO3_star_1Den)
+print("Subsistence NO3 to support bulk nitrate reduction by facultative anaerobe =", NO3_star_fac)
+print("Subsistence NO3 to support bulk nitrate reduction by full denitrifier =", NO3_star_3Den)
 
 
 #%% begin loop of experiments
+
+ts = {}
 
 from model import OMZredox
 from line_plot import line_plot
@@ -192,9 +218,9 @@ for k in np.arange(len(Sd0_exp)):
         in_NH4 = 0.0
         
         # 2) Initial biomasses (set to 0.0 to exclude)
-        in_bHet = 0.1
-        in_bFac = 0.0
-        in_b1Den = 0.1
+        in_bHet = 0.0
+        in_bFac = 0.1
+        in_b1Den = 0.0
         in_b2Den = 0.1
         in_b3Den = 0.0
         in_bAOO = 0.1
@@ -247,15 +273,48 @@ for k in np.arange(len(Sd0_exp)):
         out_uNOO = results[21]
         out_uAOX = results[22]
         out_facaer = results[23]
-        out_rHet = results[24]
-        out_rHetAer = results[25]
-        out_rO2C = results[26]
-        out_r1Den = results[27]
-        out_r2Den = results[28]
-        out_r3Den = results[29]
-        out_rAOO = results[30]
-        out_rNOO = results[31]
-        out_rAOX = results[32]
+        out_facnoo_lim = results[24]
+        out_rHet = results[25]
+        out_rHetAer = results[26]
+        out_rO2C = results[27]
+        out_r1Den = results[28]
+        out_r2Den = results[29]
+        out_r3Den = results[30]
+        out_rAOO = results[31]
+        out_rNOO = results[32]
+        out_rAOX = results[33]
+        
+        ts['dm_O2_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[34]
+        ts['dm_NO3_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[35]
+        ts['dm_NO2_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[36]
+        ts['dm_NH4_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[37]
+        ts['dm_N2_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[38]
+        ts['dm_Sd_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[39]
+        ts['du_Het_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[40]
+        ts['du_Fac_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[41]
+        ts['du_1Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[42]
+        ts['du_2Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[43]
+        ts['du_3Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[44]
+        ts['du_AOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[45]
+        ts['du_NOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[46]
+        ts['du_AOX_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[47]
+        ts['db_Het_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[48]
+        ts['db_Fac_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[49]
+        ts['db_1Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[50]
+        ts['db_2Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[51]
+        ts['db_3Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[52]
+        ts['db_AOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[53]
+        ts['db_NOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[54]
+        ts['db_AOX_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[55]
+        ts['dr_Het_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[56]
+        ts['dr_HetAer_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[57]
+        ts['dr_O2C_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[58]
+        ts['dr_1Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[59]
+        ts['dr_2Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[60]
+        ts['dr_3Den_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[61]
+        ts['dr_AOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[62]
+        ts['dr_NOO_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[63]
+        ts['dr_AOX_oxy%.2f_org%.2f'%(in_O2,in_Sd)] = results[64]
         
         '''
         # 4) plot the results
@@ -289,6 +348,7 @@ for k in np.arange(len(Sd0_exp)):
         fin_uNOO[k,m] = np.nanmean(out_uNOO[-200::])
         fin_uAOX[k,m] = np.nanmean(out_uAOX[-200::])
         fin_facaer[k,m] = np.nanmean(out_facaer[-200::])
+        fin_facnoo_lim[k,m] = np.nanmean(out_facnoo_lim[-200::])
         fin_rHet[k,m] = np.nanmean(out_rHet[-200::])
         fin_rHetAer[k,m] = np.nanmean(out_rHetAer[-200::])
         fin_rO2C[k,m] = np.nanmean(out_rO2C[-200::])
@@ -325,7 +385,7 @@ del results
 del out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2
 del out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX
 del out_uHet, out_uFac, out_u1Den, out_u2Den, out_u3Den, out_uAOO, out_uNOO, out_uAOX
-del out_facaer, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX
+del out_facaer, ou_facnoo_lim, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX
 
 
 #%% save the output to data folder
@@ -360,6 +420,7 @@ np.savetxt(fname+'_uNOO.txt', fin_uNOO, delimiter='\t')
 np.savetxt(fname+'_uAOX.txt', fin_uAOX, delimiter='\t')
 
 np.savetxt(fname+'_facaer.txt', fin_facaer, delimiter='\t')
+np.savetxt(fname+'_facnoo_lim.txt', fin_facaer, delimiter='\t')
 np.savetxt(fname+'_rHet.txt', fin_rHet, delimiter='\t')
 np.savetxt(fname+'_rHetAer.txt', fin_rHetAer, delimiter='\t')
 np.savetxt(fname+'_r1Den.txt', fin_r1Den, delimiter='\t')
@@ -510,6 +571,139 @@ os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerob
 fig.savefig('outcomes_'+fname+'.png', dpi=300)
 fig.savefig('transparent/outcomes_'+fname+'.png', dpi=300, transparent=True)
 
+
+#%% plot the timeseries of the final interval
+
+k = 2
+m = 1
+exp = '_oxy%.2f_org%.2f'%(O20_exp[k], Sd0_exp[m])
+print(exp)
+
+fstic = 13
+fslab = 15
+cols = ['k', 'k', 'firebrick', 'firebrick', 'firebrick', 'goldenrod', 'royalblue', 'forestgreen']
+lsty = ['-', '--', '-', '--', ':', '-', '-', '-']
+labs = ['Aer', 'Fac', 'Den$_{nar}$', 'Den$_{nir}$', 'Den$_{full}$', 'AOO', 'NOO', 'AOX']
+
+fig = plt.figure(figsize=(16,9))
+gs = GridSpec(8, 2)
+
+ax1 = plt.subplot(gs[0:4,0])
+ax2 = plt.subplot(gs[0:4,1])
+ax3 = plt.subplot(gs[4:8,0])
+ax4 = plt.subplot(gs[4:5,1])
+ax5 = plt.subplot(gs[5:6,1])
+ax6 = plt.subplot(gs[6:7,1])
+ax7 = plt.subplot(gs[7:8,1])
+
+ax1.spines['top'].set_visible(False)
+ax2.spines['top'].set_visible(False)
+ax3.spines['top'].set_visible(False)
+ax4.spines['top'].set_visible(False)
+ax5.spines['top'].set_visible(False)
+ax6.spines['top'].set_visible(False)
+ax7.spines['top'].set_visible(False)
+ax1.spines['right'].set_visible(False)
+ax2.spines['right'].set_visible(False)
+ax3.spines['right'].set_visible(False)
+ax4.spines['right'].set_visible(False)
+ax5.spines['right'].set_visible(False)
+ax6.spines['right'].set_visible(False)
+ax7.spines['right'].set_visible(False)
+
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_Het'+exp], color=cols[0], linestyle=lsty[0], label=labs[0])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_Fac'+exp], color=cols[1], linestyle=lsty[1], label=labs[1])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_1Den'+exp], color=cols[2], linestyle=lsty[2], label=labs[2])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_2Den'+exp], color=cols[3], linestyle=lsty[3], label=labs[3])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_3Den'+exp], color=cols[4], linestyle=lsty[4], label=labs[4])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_AOO'+exp], color=cols[5], linestyle=lsty[5], label=labs[5])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_NOO'+exp], color=cols[6], linestyle=lsty[6], label=labs[6])
+ax1.plot(np.arange(1/dt * out_at_day), ts['du_AOX'+exp], color=cols[7], linestyle=lsty[7], label=labs[7])
+
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_Het'+exp], color=cols[0], linestyle=lsty[0], label=labs[0])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_Fac'+exp], color=cols[1], linestyle=lsty[1], label=labs[1])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_1Den'+exp], color=cols[2], linestyle=lsty[2], label=labs[2])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_2Den'+exp], color=cols[3], linestyle=lsty[3], label=labs[3])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_3Den'+exp], color=cols[4], linestyle=lsty[4], label=labs[4])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_AOO'+exp], color=cols[5], linestyle=lsty[5], label=labs[5])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_NOO'+exp], color=cols[6], linestyle=lsty[6], label=labs[6])
+ax2.plot(np.arange(1/dt * out_at_day), ts['db_AOX'+exp], color=cols[7], linestyle=lsty[7], label=labs[7])
+ax2.legend()
+
+labs = ['Heterotrophy', 'O$_2$ loss', 'NO$_3$ --> NO$_2$', 'NO$_2$ --> N$_2$', \
+        'NO$_3$ --> N$_2$', 'NH$_4$ --> NO$_2$', 'NO$_2$ --> NO$_3$', 'Anammox (NH$_4$ loss)']
+
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_Het'+exp], color=cols[0], linestyle=lsty[0], label=labs[0])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_HetAer'+exp], color=cols[0], linestyle=':', label='Aerobic Heterotrophy')
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_O2C'+exp], color=cols[1], linestyle=lsty[1], label=labs[1])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_1Den'+exp], color=cols[2], linestyle=lsty[2], label=labs[2])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_2Den'+exp], color=cols[3], linestyle=lsty[3], label=labs[3])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_3Den'+exp], color=cols[4], linestyle=lsty[4], label=labs[4])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_AOO'+exp], color=cols[5], linestyle=lsty[5], label=labs[5])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_NOO'+exp], color=cols[6], linestyle=lsty[6], label=labs[6])
+ax3.plot(np.arange(1/dt * out_at_day), ts['dr_AOX'+exp], color=cols[7], linestyle=lsty[7], label=labs[7])
+ax3.legend(loc='upper right')
+
+ax4.plot(np.arange(1/dt * out_at_day), ts['dm_O2'+exp]*1e3, color='k', linestyle='-', label='O$_2$')
+#ax4.plot((0,1/dt * out_at_day),(O2_star_aer, O2_star_aer), 'k--' )
+ax4.plot((0,1/dt * out_at_day),(O2_star_fac, O2_star_fac), 'k--' )
+ax4.plot((0,1/dt * out_at_day),(O2_star_aoo, O2_star_aoo), 'k--' )
+ax4.plot((0,1/dt * out_at_day),(O2_star_noo, O2_star_noo), 'k--' )
+#ax4.text(1/dt * out_at_day+1,O2_star_aer, 'O$_2^{*aer}$', va='center', ha='left')
+ax4.text(1/dt * out_at_day+1,O2_star_fac, 'O$_2^{*fac}$', va='center', ha='left')
+ax4.text(1/dt * out_at_day+1,O2_star_aoo, 'O$_2^{*aoo}$', va='center', ha='left')
+ax4.text(1/dt * out_at_day+1,O2_star_noo, 'O$_2^{*noo}$', va='center', ha='left')
+
+ax5.plot(np.arange(1/dt * out_at_day), ts['dm_NO2'+exp], color='firebrick', linestyle='-', label='NO$_2$')
+ax5.plot((0,1/dt * out_at_day),(NO2_star_2Den, NO2_star_2Den), color='firebrick', linestyle='--' )
+ax5.plot((0,1/dt * out_at_day),(NO2_star_noo, NO2_star_noo), color='firebrick', linestyle='--' )
+ax5.plot((0,1/dt * out_at_day),(NO2_star_aox, NO2_star_aox), color='firebrick', linestyle='--' )
+ax5.text(1/dt * out_at_day+1,NO2_star_2Den, 'NO$_2^{*nir}$', va='center', ha='left', color='firebrick')
+ax5.text(1/dt * out_at_day+1,NO2_star_noo, 'NO$_2^{*noo}$', va='center', ha='left', color='firebrick')
+ax5.text(1/dt * out_at_day+1,NO2_star_aox, 'NO$_2^{*aox}$', va='center', ha='left', color='firebrick')
+
+ax6.plot(np.arange(1/dt * out_at_day), ts['dm_NH4'+exp], color='goldenrod', linestyle='-', label='NH$_4$')
+ax6.plot((0,1/dt * out_at_day),(NH4_star_aoo, NH4_star_aoo), color='goldenrod', linestyle='--' )
+ax6.plot((0,1/dt * out_at_day),(NH4_star_aox, NH4_star_aox), color='goldenrod', linestyle='--' )
+ax6.text(1/dt * out_at_day+1,NH4_star_aoo, 'NH$_4^{*aoo}$', va='center', ha='left', color='goldenrod')
+ax6.text(1/dt * out_at_day+1,NH4_star_aox, 'NH$_4^{*aox}$', va='center', ha='left', color='goldenrod')
+
+ax7.plot(np.arange(1/dt * out_at_day), ts['dm_Sd'+exp], color='forestgreen', linestyle='-', label='N$_{org}$')
+ax7.plot((0,1/dt * out_at_day),(OM_star_aer, OM_star_aer), color='forestgreen', linestyle='--' )
+ax7.plot((0,1/dt * out_at_day),(OM_star_1Den, OM_star_1Den), color='forestgreen', linestyle='--' )
+ax7.text(1/dt * out_at_day+1,OM_star_aer, 'OM$^{*aer}$', va='center', ha='left', color='forestgreen')
+ax7.text(1/dt * out_at_day+1,OM_star_1Den, 'OM$^{*den}$', va='center', ha='left', color='forestgreen')
+
+
+ax1.tick_params(labelsize=fstic, labelbottom=False)
+ax2.tick_params(labelsize=fstic, labelbottom=False)
+ax3.tick_params(labelsize=fstic)
+ax4.tick_params(labelsize=fstic, labelbottom=False)
+ax5.tick_params(labelsize=fstic, labelbottom=False)
+ax6.tick_params(labelsize=fstic, labelbottom=False)
+ax7.tick_params(labelsize=fstic)
+
+ax1.set_ylabel('Growth rates (day$^{-1}$)', fontsize=fslab)
+ax2.set_ylabel('Biomasses ($\mu$M N)', fontsize=fslab)
+ax3.set_ylabel('Rates ($\mu$M day$^{-1}$)', fontsize=fslab)
+#ax4.set_ylabel('Concentrations ($\mu$M)', fontsize=fslab)
+ax3.set_xlabel('Timestep', fontsize=fslab)
+ax7.set_xlabel('Timestep', fontsize=fslab)
+
+ax1.set_xscale('log')
+ax2.set_xscale('log')
+ax3.set_xscale('log')
+ax4.set_xscale('log')
+ax5.set_xscale('log')
+ax6.set_xscale('log')
+ax7.set_xscale('log')
+
+
+#%%
+
+os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/figures")
+fig.savefig('timeseries_'+fname+'.png', dpi=300)
+fig.savefig('transparent/timeseries_'+fname+'.png', dpi=300, transparent=True)
 
 
 

@@ -155,6 +155,7 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         out_uAOX     :   AOX growth rate
 
         out_facaer   :   average fraction of aerobic heterotrophy by facultative population
+        out_facnoo_lim : average fraction of NO2-limited growth of NOO
         out_rHet     :   Rate of heterotrophy (Org--> NH4) (mmol Org m-3 day-1)
         out_rHetAer  :   Rate of aerobic heterotrophy (Org--> NH4) (mmol Org m-2 day-1)
         out_rO2C     :   Rate of O2 consumption (mmol O2 m-3 day-1)
@@ -208,6 +209,8 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
     out_uNOO = np.ones((int(nn_output)+1)) * np.nan
     out_uAOX = np.ones((int(nn_output)+1)) * np.nan
     out_facaer = np.ones((int(nn_output)+1)) * np.nan
+    out_facnoo_lim = np.ones((int(nn_output)+1)) * np.nan
+    out_maxnox = np.ones((int(nn_output)+1)) * np.nan
     out_rHet = np.ones((int(nn_output)+1)) * np.nan
     out_rHetAer = np.ones((int(nn_output)+1)) * np.nan
     out_rO2C = np.ones((int(nn_output)+1)) * np.nan
@@ -218,9 +221,44 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
     out_rNOO = np.ones((int(nn_output)+1)) * np.nan
     out_rAOX = np.ones((int(nn_output)+1)) * np.nan
     
-    # set the array for recording average activity of facultative anaerobes
+    # set the array for recording average aerobic or anaerobic activity of facultative population
     interval = int((1/dt * out_at_day))
     facaer = np.ones((interval)) * np.nan
+    facnoo_lim = np.ones((interval)) * np.nan
+    maxnox = np.ones((interval)) * np.nan
+    
+    # set the arrays for activities over the final interval of the experiment
+    dm_O2 = np.ones((interval)) * np.nan
+    dm_NO3 = np.ones((interval)) * np.nan
+    dm_NO2 = np.ones((interval)) * np.nan
+    dm_NH4 = np.ones((interval)) * np.nan
+    dm_N2 = np.ones((interval)) * np.nan
+    dm_Sd = np.ones((interval)) * np.nan
+    du_Het = np.ones((interval)) * np.nan
+    du_Fac = np.ones((interval)) * np.nan
+    du_1Den = np.ones((interval)) * np.nan
+    du_2Den = np.ones((interval)) * np.nan
+    du_3Den = np.ones((interval)) * np.nan
+    du_AOO = np.ones((interval)) * np.nan
+    du_NOO = np.ones((interval)) * np.nan
+    du_AOX = np.ones((interval)) * np.nan
+    db_Het = np.ones((interval)) * np.nan
+    db_Fac = np.ones((interval)) * np.nan
+    db_1Den = np.ones((interval)) * np.nan
+    db_2Den = np.ones((interval)) * np.nan
+    db_3Den = np.ones((interval)) * np.nan
+    db_AOO = np.ones((interval)) * np.nan
+    db_NOO = np.ones((interval)) * np.nan
+    db_AOX = np.ones((interval)) * np.nan
+    dr_Het = np.ones((interval)) * np.nan
+    dr_HetAer = np.ones((interval)) * np.nan
+    dr_O2C = np.ones((interval)) * np.nan
+    dr_1Den = np.ones((interval)) * np.nan
+    dr_2Den = np.ones((interval)) * np.nan
+    dr_3Den = np.ones((interval)) * np.nan
+    dr_AOO = np.ones((interval)) * np.nan
+    dr_NOO = np.ones((interval)) * np.nan
+    dr_AOX = np.ones((interval)) * np.nan
     
     # record the initial conditions
     i = 0
@@ -269,6 +307,12 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         u_NOO = np.fmax(0.0, np.fmin(p_NO2_NOO * y_nNOO, p_O2_noo * y_oNOO))    # mol NO2 / day * mol Biomass / mol NO2 || mol O2 / day * mol Biomass / mol O2
         u_AOX = np.fmax(0.0, np.fmin(p_NO2_AOX * y_no2AOX, p_NH4_AOX * y_nh4AOX)) # mol NO2 / day * mol Biomass / mol NO2 || mol NH4 / day * mol Biomass / mol NH4
         
+        # record the limitation of NOO by O2 or NO2
+        if (p_NO2_NOO * y_nNOO) > (p_O2_noo * y_oNOO):
+            facnoo_lim[int(t % interval)] = 1.0
+        else:
+            facnoo_lim[int(t % interval)] = 0.0
+        
         ### BIOMASS TYPES & THEIR STOICHIOMETRIES (already encoded within yields, which are inputs)
         # 1. Aerobic heterotrophy ( 7.1-OM + 47-O2 --> B + 42-CO2 + 6.1-NH4)
         # 2. Facultative anaerobes ( 8.9-OM + 60-O2 --> B + 53-CO2 + 7.9-NH4)
@@ -302,7 +346,7 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         
         ### rates
         aer_heterotrophy = u_Het * m_bHet / y_oHet      \
-                           + ddt_Sd_Fac
+                           + ddt_Sd_Fac * facaer[int(t % interval)]
         heterotrophy = u_Het * m_bHet / y_oHet      \
                        + ddt_Sd_Fac                 \
                        + u_1Den * m_b1Den / y_n1Den \
@@ -321,6 +365,8 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         anammox_nh4 = u_AOX * m_bAOX / y_nh4AOX
         anammox_no2 = u_AOX * m_bAOX / y_no2AOX
         anammox_no3 = u_AOX * m_bAOX * e_no3AOX
+        # record nitrite oxidation rate
+        maxnox[int(t % interval)] = nitrite_ox
         
         # Dissolved organic matter (consumed by 1, 2, 3, 4, 5)
         ddt_Sd = dil * (in_Sd - m_Sd) - heterotrophy
@@ -413,6 +459,46 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
         m_bNOO = m_bNOO + ddt_bNOO * dt
         m_bAOX = m_bAOX + ddt_bAOX * dt
         
+        # Record tracer concentrations at each timestep
+        dm_O2[int(t % interval)] = m_O2
+        dm_NO3[int(t % interval)] = m_NO3
+        dm_NO2[int(t % interval)] = m_NO2
+        dm_NH4[int(t % interval)] = m_NH4
+        dm_N2[int(t % interval)] = m_N2
+        dm_Sd[int(t % interval)] = m_Sd
+        
+        # Record growth rates at each timestep
+        du_Het[int(t % interval)] = u_Het
+        du_Fac[int(t % interval)] = u_Fac
+        du_1Den[int(t % interval)] = u_1Den
+        du_2Den[int(t % interval)] = u_2Den
+        du_3Den[int(t % interval)] = u_3Den
+        du_AOO[int(t % interval)] = u_AOO
+        du_NOO[int(t % interval)] = u_NOO
+        du_AOX[int(t % interval)] = u_AOX
+        
+        # Record biomass at each timestep
+        db_Het[int(t % interval)] = m_bHet
+        db_Fac[int(t % interval)] = m_bFac
+        db_1Den[int(t % interval)] = m_b1Den
+        db_2Den[int(t % interval)] = m_b2Den
+        db_3Den[int(t % interval)] = m_b3Den
+        db_AOO[int(t % interval)] = m_bAOO
+        db_NOO[int(t % interval)] = m_bNOO
+        db_AOX[int(t % interval)] = m_bAOX
+        
+        # Record rates at each timestep
+        dr_Het[int(t % interval)] = heterotrophy
+        dr_HetAer[int(t % interval)] = aer_heterotrophy
+        dr_O2C[int(t % interval)] = oxy_consumption
+        dr_1Den[int(t % interval)] = den_nar
+        dr_2Den[int(t % interval)] = den_nir
+        dr_3Den[int(t % interval)] = den_full
+        dr_AOO[int(t % interval)] = ammonia_ox
+        dr_NOO[int(t % interval)] = nitrite_ox
+        dr_AOX[int(t % interval)] = anammox_nh4
+        
+        
         # pulse OM and O2 into the chemostat
         if (t % int((1/dt * pulse_int))) == 0:
             m_Sd = m_Sd + pulse_Sd
@@ -450,6 +536,8 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
             out_uNOO[i] = u_NOO
             out_uAOX[i] = u_AOX
             out_facaer[i] = np.nanmean(facaer)
+            out_facnoo_lim[i] = np.nanmean(facnoo_lim)
+            out_maxnox[i] = np.nanmean(maxnox)
             out_rHet[i] = heterotrophy
             out_rHetAer[i] = aer_heterotrophy
             out_rO2C[i] = oxy_consumption
@@ -460,7 +548,12 @@ def OMZredox(timesteps, nn_output, dt, dil, out_at_day, \
             out_rNOO[i] = nitrite_ox
             out_rAOX[i] = anammox_nh4
             
+            
     return [out_Sd, out_Sp, out_O2, out_NO3, out_NO2, out_NH4, out_N2, \
             out_bHet, out_bFac, out_b1Den, out_b2Den, out_b3Den, out_bAOO, out_bNOO, out_bAOX, \
             out_uHet, out_uFac, out_u1Den, out_u2Den, out_u3Den, out_uAOO, out_uNOO, out_uAOX, \
-            out_facaer, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX]
+            out_facaer, out_facnoo_lim, out_maxnox, out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, out_rNOO, out_rAOX, \
+            dm_O2, dm_NO3, dm_NO2, dm_NH4, dm_N2, dm_Sd, \
+            du_Het, du_Fac, du_1Den, du_2Den, du_3Den, du_AOO, du_NOO, du_AOX, \
+            db_Het, db_Fac, db_1Den, db_2Den, db_3Den, db_AOO, db_NOO, db_AOX, \
+            dr_Het, dr_HetAer, dr_O2C, dr_1Den, dr_2Den, dr_3Den, dr_AOO, dr_NOO, dr_AOX ]

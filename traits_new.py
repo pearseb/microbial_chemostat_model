@@ -15,11 +15,12 @@ from yield_from_stoichiometry import yield_stoich
 
 
 ### 1.0 max growth rates (per day)
-mumax_Het = 0.5     # Rappé et al., 2002
-mumax_AOO = 0.5     # Wutcher et al. 2006; Horak et al. 2013; Shafiee et al. 2019; Qin et al. 2015
-mumax_NOO = 0.96    # Spieck et al. 2014)
-mumax_AOX = 0.2     # Okabe et al. 2021 ISME | Lotti et al. 2014
+mumax_Het = 0.50    # Rappé et al., 2002; --Kirkman 2016--
+mumax_AOO = 0.50    # Wutcher et al. 2006; Horak et al. 2013; Shafiee et al. 2019; Qin et al. 2015
+mumax_NOO = 1.00    # Spieck et al. 2014; Kitzinger et al. 2020
+mumax_AOX = 0.20    # Okabe et al. 2021 ISME | Lotti et al. 2014
 
+#mumax_NOO = 0.2
 
 ### 2.0 diffusive oxygen requirements based on cell diameters and carbon contents
 
@@ -72,7 +73,7 @@ po_noo = po_coef(diam_noo, Qc_noo, CN_noo)
 po_aox = po_coef(diam_aox, Qc_aox, CN_aox)
 
 
-### 2.0 Yields (y), products (e) and maximum uptake rate (Vmax)
+### 3.0 Yields (y), products (e) and maximum uptake rate (Vmax)
 ###     Vmax = ( mu_max * Quota ) / yield 
 ###     we remove the need for the Quota term by considering everything in mols N per mol N-biomass, such that
 ###     Vmax = mu_max / yield (units of mol N per mol N-biomass per day)
@@ -106,7 +107,7 @@ VmaxN_1Den = mumax_Het * den_penalty / y_n1NO3        # mol DIN / mol cell N / d
 # nitrite reduction (NO2 --> N2)
 y_n2Den = y_oHet * den_penalty          # we asssume that the yield of anaerobic respiration using NO2 is 90% of aerobic respiration
 f_n2Den = y_n2Den * dB/dO       # fraction of electrons used for biomass synthesis
-y_n2NO2 = (f_n2Den/dB) / ((1.0-f_n2Den)/2.0) # yield of biomass per unit nitrite reduced
+y_n2NO2 = (f_n2Den/dB) / ((1.0-f_n2Den)/3.0) # yield of biomass per unit nitrite reduced
 e_n2Den = 1.0 / y_n2NO2         # mols N2 produced per mol biomass synthesised
 VmaxN_2Den = mumax_Het * den_penalty / y_n2NO2        # mol DIN / mol cell N / day at 20C
 
@@ -150,14 +151,15 @@ VmaxNH4_AOX = mumax_AOX / y_nh4AOX
 VmaxNO2_AOX = mumax_AOX / y_no2AOX
 
 
-### 3.0 Half-saturation coefficients
+### 4.0 Half-saturation coefficients
 K_s = 0.1           # organic nitrogen (uncertain) uM
 K_n_Den = 4.0       # 4 – 25 µM NO2 for denitrifiers (Almeida et al. 1995)
 K_n_AOO = 0.1       # Martens-Habbena et al. 2009 Nature
 K_n_NOO = 0.1       # Reported from OMZ (Sun et al. 2017) and oligotrophic conditions (Zhang et al. 2020)
 K_nh4_AOX = 0.45    # Awata et al. 2013 for Scalindua
 K_no2_AOX = 0.45    # Awata et al. 2013 for Scalindua actually finds a K_no2 of 3.0 uM, but this excludes anammox completely in our experiments
-
+                     # perhaps this difference is due to the fact that NO2 is always very high in the environment, 
+                     # refelcting the fact that the cells would put more energy into NH4 trasnporters
 
 
 ### Check useages of N in reactions
