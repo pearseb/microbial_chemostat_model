@@ -20,7 +20,6 @@ mumax_AOO = 0.50    # Wutcher et al. 2006; Horak et al. 2013; Shafiee et al. 201
 mumax_NOO = 1.00    # Spieck et al. 2014; Kitzinger et al. 2020
 mumax_AOX = 0.20    # Okabe et al. 2021 ISME | Lotti et al. 2014
 
-#mumax_NOO = 0.2
 
 ### 2.0 diffusive oxygen requirements based on cell diameters and carbon contents
 
@@ -126,7 +125,7 @@ y_oO2Fac = (f_oHetFac/dB) / ((1.0-f_oHetFac)/4.0)  # yield of biomass per unit o
 y_n1DenFac = y_n1Den * fac_penalty
 f_n1DenFac = y_n1DenFac * dB/dO
 y_n1NO3Fac = (f_n1DenFac/dB) / ((1.0-f_n1DenFac)/2.0)
-VmaxN_1DenFac = mumax_Het * fac_penalty / y_n1NO3Fac        # mol DIN / mol cell N / day at 20C
+VmaxN_1DenFac = mumax_Het * den_penalty * fac_penalty / y_n1NO3Fac        # mol DIN / mol cell N / day at 20C
 
 # Chemoautotrophic ammonia oxidation (NH3 --> NO2)
 y_nAOO = 0.0245         # mol N biomass per mol NH4 (Bayer et al. 2022; Zakem et al. 2022)
@@ -155,7 +154,7 @@ VmaxNO2_AOX = mumax_AOX / y_no2AOX
 K_s = 0.1           # organic nitrogen (uncertain) uM
 K_n_Den = 4.0       # 4 – 25 µM NO2 for denitrifiers (Almeida et al. 1995)
 K_n_AOO = 0.1       # Martens-Habbena et al. 2009 Nature
-K_n_NOO = 0.1       # Reported from OMZ (Sun et al. 2017) and oligotrophic conditions (Zhang et al. 2020)
+K_n_NOO = 0.1       # Reported from OMZ (Sun et al. 2017), oligotrophic conditions (Zhang et al. 2020), and Southern Ocean (Mdutyana et al. 2022)
 K_nh4_AOX = 0.45    # Awata et al. 2013 for Scalindua
 K_no2_AOX = 0.45    # Awata et al. 2013 for Scalindua actually finds a K_no2 of 3.0 uM, but this excludes anammox completely in our experiments
                      # perhaps this difference is due to the fact that NO2 is always very high in the environment, 

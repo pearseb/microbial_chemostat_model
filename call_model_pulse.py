@@ -70,12 +70,12 @@ Sp0_exp = 0.0    # uM N  (particulate; p)
 O20_exp = 0.5   # uM O2
 
 ### set pulsing terms
-xpulse_int = np.arange(0.25,10.1,0.25)  # intervals between pulses (number of days)
-xpulse_O2 = np.arange(0.0,2.01,0.05)  # Oxygen consumption rates vary between 0 and 1.5 uM per day (Kavelage et al. 2015)
+xpulse_int = np.arange(0.25,10.1,0.25)[::10]  # intervals between pulses (number of days)
+xpulse_O2 = np.arange(0.0,2.01,0.05)[::10]  # Oxygen consumption rates vary between 0 and 1.5 uM per day (Kavelage et al. 2015)
 
 ### model parameters
 dil = 0.05  # dilution rate (1/day)
-days = 1e4  # number of days to run chemostat
+days = 1e3  # number of days to run chemostat
 dt = 0.001  # timesteps per day (days)
 timesteps = days/dt     # number of timesteps
 out_at_day = 10.0       # output results this often (days)
@@ -133,7 +133,8 @@ fin_rAOX = np.ones((len(xpulse_int), len(xpulse_O2))) * np.nan
 
 #%% set traits of the different biomasses
 
-os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
+#os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
+os.chdir("/Users/pbuchanan/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
 
 #from traits_old import *
 from traits_new import *
@@ -392,7 +393,8 @@ del out_rHet, out_rHetAer, out_rO2C, out_r1Den, out_r2Den, out_r3Den, out_rAOO, 
 
 #%% save the output to data folder
 
-os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data/0D_redox_model_output")
+#os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data/0D_redox_model_output")
+os.chdir("/Users/pbuchanan/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data/0D_redox_model_output")
 
 fname = 'newtraits_pulse_Org_%.2f_Oxy_%.2f'%(Sd0_exp, O20_exp)
 
@@ -494,7 +496,8 @@ ax8.contour(xpulse_O2, xpulse_int, fin_O2*1e3, levels=[100], colors='k', linewid
 ax9.contour(xpulse_O2, xpulse_int, fin_O2*1e3, levels=[100], colors='k', linewidths=lw)
 
 # get Babbin et al. 2020 Marine Chemistry data and find combination of Org and O2 supply that explains their data
-os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data")
+#os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data")
+os.chdir("/Users/pbuchanan/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/data")
 babbin = pd.read_csv('Babbin2020.csv')
 no2 = babbin['NO2(uM)'].quantile(q=0.25, interpolation='linear')
 no2_ox = babbin['NO2_ox'].quantile(q=0.25, interpolation='linear')
@@ -555,8 +558,8 @@ fig.savefig('transparent/outcomes_'+fname+'.png', dpi=300, transparent=True)
 
 #%% plot the timeseries of the final interval
 
-k = 5
-m = 8
+k = 2
+m = 3
 exp = '_oxy%.2f_int%.2f'%(xpulse_O2[k], xpulse_int[m])
 print(exp)
 

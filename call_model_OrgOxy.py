@@ -135,7 +135,8 @@ fin_rAOX = np.ones((len(Sd0_exp), len(O20_exp))) * np.nan
 
 #%% set traits of the different biomasses
 
-os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
+#os.chdir("C://Users/pearseb/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
+os.chdir("/Users/pbuchanan/Dropbox/PostDoc/my articles/Buchanan & Zakem - aerobic anaerobic competition/model and scripts/0D_redox_model")
 
 #from traits_old import *
 from traits_new import *
